@@ -1,29 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>30-Day Checklist</title>
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:15px; background:#f7f7f7; text-align:center; }
-    h2 { margin-bottom:12px; }
-    .row { display:flex; align-items:center; padding:14px; margin:8px 0; background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.08); cursor:pointer; transition:background .15s; }
-    .row:hover { background:#f1f1f1; }
-    .row input[type=checkbox] { width:22px; height:22px; margin-right:12px; accent-color:#007bff; pointer-events:none; }
-    label { font-size:16px; cursor:pointer; text-align:left; flex:1; }
-    select, button { width:100%; padding:12px; margin:10px 0; font-size:16px; border-radius:8px; border:1px solid #ccc; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,0.03); }
-    button { background:#007bff; color:#fff; border:none; font-weight:600; cursor:pointer; }
-    button[disabled] { opacity:.6; cursor:default; }
-    #successScreen { display:none; margin-top:40px; }
-    #confettiCanvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:9999; }
-
-    /* loading skeleton */
-    .skeleton { display:block; height:16px; width:70%; background:linear-gradient(90deg,#eee,#f5f5f5,#eee); background-size:200% 100%; animation:shimmer 1.2s infinite; border-radius:8px; }
-    .skeleton-row { display:flex; align-items:center; gap:12px; padding:14px; margin:8px 0; background:#fff; border-radius:10px; box-shadow:0 1px 3px rgba(0,0,0,0.02); }
-    .skeleton .dot { width:22px; height:22px; border-radius:4px; background:#eee; flex:0 0 22px; }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-    .error { color:#b00020; padding:10px; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+      background: #f9f9f9;
+      text-align: center;
+    }
+    h2 { margin-bottom: 15px; }
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      margin: 8px 0;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .row:hover { background: #f1f1f1; }
+    .row input[type=checkbox] {
+      width: 22px; height: 22px; margin-right: 12px;
+      accent-color: #007bff; pointer-events: none;
+    }
+    label { font-size: 16px; cursor: pointer; }
+    select, button {
+      width: 100%; padding: 12px; margin: 10px 0;
+      font-size: 16px; border-radius: 8px; border: 1px solid #ccc;
+      background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    button {
+      background: #007bff; color: #fff; border: none;
+      font-weight: bold; cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+    #successScreen { display: none; margin-top: 50px; }
+    #confettiCanvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none; z-index: 9999;
+    }
   </style>
 </head>
 <body>
@@ -38,13 +60,13 @@
   <div id="successScreen">
     <h2>✅ Submitted Successfully!</h2>
     <p id="successMsg">Your response has been recorded.</p>
-    <button id="nextBtn">Go to Next Day</button>
+    <button id="nextBtn" onclick="nextDay()">Go to Next Day</button>
   </div>
 
   <canvas id="confettiCanvas"></canvas>
 
   <script>
-    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzRkW6fk3GqZz9xuolGNFhtoYS3DmWsLRYMAupMqcUk0QNmL0H7oQptBEYGCJHj7kNc/exec"; // <-- replace with your Apps Script web app URL
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzRkW6fk3GqZz9xuolGNFhtoYS3DmWsLRYMAupMqcUk0QNmL0H7oQptBEYGCJHj7kNc/exec";  // paste Apps Script link here
     const daySel = document.getElementById('daySel');
     const itemsDiv = document.getElementById('items');
     const saveBtn = document.getElementById('saveBtn');
@@ -52,179 +74,132 @@
     const successScreen = document.getElementById('successScreen');
     const successMsg = document.getElementById('successMsg');
     const nextBtn = document.getElementById('nextBtn');
-    const confettiCanvas = document.getElementById('confettiCanvas');
-    const ctx = confettiCanvas.getContext('2d');
+    const confettiCanvas = document.getElementById("confettiCanvas");
+    const ctx = confettiCanvas.getContext("2d");
 
     let currentDay = 1;
 
-    // populate days
-    for (let i=1;i<=30;i++){
+    // Build day selector
+    for (let i = 1; i <= 30; i++) {
       daySel.innerHTML += `<option value="${i}">Day ${i}</option>`;
     }
 
-    // events
     daySel.addEventListener('change', loadDay);
     saveBtn.addEventListener('click', saveDay);
-    nextBtn.addEventListener('click', nextDay);
-
-    // initial load
     loadDay();
 
-    // show quick skeleton to avoid showing old data
-    function showLoadingSkeleton(rows=5){
-      let html = '';
-      for(let i=0;i<rows;i++){
-        html += `<div class="skeleton-row"><div class="dot"></div><span class="skeleton"></span></div>`;
-      }
-      itemsDiv.innerHTML = html;
+    function loadDay() {
+      currentDay = parseInt(daySel.value, 10);
+      itemsDiv.innerHTML = "Loading...";
+      fetch(WEBAPP_URL + "?day=" + currentDay)
+        .then(res => res.json())
+        .then(data => renderItems(data))
+        .catch(err => { itemsDiv.innerHTML = "⚠️ Failed to load."; });
     }
 
-    function loadDay(){
-      // read day from select to avoid stale currentDay
-      currentDay = parseInt(daySel.value, 10) || 1;
-
-      // immediately show skeleton / clear UI so user doesn't see old day
-      showLoadingSkeleton();
-
-      // cache-bust query param and request no-store
-      const url = `${WEBAPP_URL}?day=${currentDay}&_=${Date.now()}`;
-
-      fetch(url, { cache: 'no-store' })
-        .then(res => {
-          if (!res.ok) throw new Error('Network response not ok');
-          return res.json();
-        })
-        .then(raw => {
-          // safety: ensure labels and states
-          const labels = Array.isArray(raw.labels) && raw.labels.length ? raw.labels : ["Morning","Afternoon","Chikki","Eggs","Dinner"];
-          const states = Array.isArray(raw.states) ? raw.states : new Array(labels.length).fill(false);
-          renderItems({ labels, states });
-        })
-        .catch(err => {
-          console.error('Load error', err);
-          itemsDiv.innerHTML = `<p class="error">Failed to load Day ${currentDay}. Please try again.</p>`;
-        });
-    }
-
-    function renderItems(data){
-      // build HTML in one go for speed
-      const labels = data.labels;
-      const states = data.states;
+    function renderItems(data) {
       let html = '';
-      for (let i=0;i<labels.length;i++){
-        const checked = states[i] ? 'checked' : '';
-        const id = `chk-${currentDay}-${i}`; // unique id per day
+      data.labels.forEach((label, idx) => {
+        const checked = data.states[idx] ? "checked" : "";
         html += `
           <div class="row" onclick="toggleRow(this)">
-            <input type="checkbox" id="${id}" ${checked}>
-            <label for="${id}">${labels[i]}</label>
-          </div>
-        `;
-      }
+            <input type="checkbox" id="chk${idx}" ${checked}>
+            <label for="chk${idx}">${label}</label>
+          </div>`;
+      });
       itemsDiv.innerHTML = html;
     }
 
-    // expose toggleRow to inline onclick
-    window.toggleRow = function(row){
+    function toggleRow(row) {
       const cb = row.querySelector('input[type=checkbox]');
-      if (cb) cb.checked = !cb.checked;
-    };
-
-    function saveDay(){
-      // gather states
-      const states = [];
-      itemsDiv.querySelectorAll('input[type=checkbox]').forEach(cb => states.push(cb.checked));
-
-      // POST with content-type and cache-bust param in URL to avoid any intermediate caching
-      fetch(`${WEBAPP_URL}?_=${Date.now()}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ day: currentDay, states })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error('Save failed');
-        return res.json();
-      })
-      .then(() => {
-        showSuccess();
-      })
-      .catch(err => {
-        console.error('Save error', err);
-        alert('Failed to save. Please try again.');
-      });
+      cb.checked = !cb.checked;
     }
 
-    function showSuccess(){
-      formScreen.style.display = 'none';
-      successScreen.style.display = 'block';
+    function saveDay() {
+      const states = [];
+      itemsDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        states.push(cb.checked);
+      });
+
+      fetch(WEBAPP_URL, {
+        method: "POST",
+        body: JSON.stringify({ day: currentDay, states: states })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if (resp.success) {
+          showSuccess();
+        } else {
+          alert("Failed to save. Please try again.");
+        }
+      })
+      .catch(() => alert("Network error. Try again."));
+    }
+
+    function showSuccess() {
+      formScreen.style.display = "none";
+      successScreen.style.display = "block";
       successMsg.innerText = `Your response for Day ${currentDay} has been recorded.`;
       startConfetti();
       setTimeout(stopConfetti, 3000);
-
-      if (currentDay === 30){
-        nextBtn.innerText = '🎉 All Days Completed!';
+      if (currentDay === 30) {
+        nextBtn.innerText = "🎉 All Days Completed!";
         nextBtn.disabled = true;
-      } else {
-        nextBtn.innerText = 'Go to Next Day';
-        nextBtn.disabled = false;
       }
     }
 
-    function nextDay(){
-      // immediate UI change to avoid showing previous day
-      formScreen.style.display = 'block';
-      successScreen.style.display = 'none';
-
-      if (currentDay < 30){
+    function nextDay() {
+      if (currentDay < 30) {
         currentDay++;
         daySel.value = currentDay;
-        // show skeleton while fetching fresh data
-        showLoadingSkeleton();
-        // fetch new day (loadDay reads the select value)
+        itemsDiv.innerHTML = '';
         loadDay();
-      } else {
-        // optional: loop back or stay
-        alert('All days are already completed.');
+        successScreen.style.display = "none";
+        formScreen.style.display = "block";
       }
     }
 
-    // Confetti (same simple canvas confetti)
-    let confetti = [];
-    function resizeCanvas(){ confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; }
-    window.addEventListener('resize', resizeCanvas);
+    // Confetti animation
+    let confettiPieces = [];
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
-    function startConfetti(){
-      confetti = Array.from({length:120}, () => ({
-        x: Math.random()*confettiCanvas.width,
-        y: -Math.random()*confettiCanvas.height,
-        r: Math.random()*6+4,
-        d: Math.random()*20+10,
-        color: `hsl(${Math.random()*360},100%,50%)`
+    function startConfetti() {
+      confettiPieces = Array.from({ length: 150 }, () => ({
+        x: Math.random() * confettiCanvas.width,
+        y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * 20 + 10,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`
       }));
       requestAnimationFrame(drawConfetti);
     }
 
-    function drawConfetti(){
-      ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
-      confetti.forEach(p => {
+    function drawConfetti() {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiPieces.forEach(p => {
         ctx.beginPath();
         ctx.fillStyle = p.color;
-        ctx.ellipse(p.x, p.y, p.r, p.r/2, Math.PI/4, 0, 2*Math.PI);
+        ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
         ctx.fill();
-        p.y += Math.cos(p.d) + 2 + p.r/2;
-        p.x += Math.sin(p.d/3);
+        p.y += 2 + Math.random() * 3;
         if (p.y > confettiCanvas.height) {
           p.y = -10;
-          p.x = Math.random()*confettiCanvas.width;
+          p.x = Math.random() * confettiCanvas.width;
         }
       });
-      if (confetti.length) requestAnimationFrame(drawConfetti);
+      if (confettiPieces.length > 0) {
+        requestAnimationFrame(drawConfetti);
+      }
     }
 
-    function stopConfetti(){
-      confetti = [];
-      ctx.clearRect(0,0,confettiCanvas.width, confettiCanvas.height);
+    function stopConfetti() {
+      confettiPieces = [];
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
     }
   </script>
 </body>
