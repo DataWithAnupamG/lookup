@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>30-Day Checklist</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 20px auto; }
+    label { margin-left: 6px; }
+    .row { margin: 8px 0; }
+    button, select { padding: 6px 10px; margin-top: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+  <h2>Daily Checklist</h2>
+
+  <label for="daySel">Select Day</label>
+  <select id="daySel"></select>
+
+  <div id="items"></div>
+
+  <button id="saveBtn">Save</button>
+
+  <script>
+    const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzRkW6fk3GqZz9xuolGNFhtoYS3DmWsLRYMAupMqcUk0QNmL0H7oQptBEYGCJHj7kNc/exec"; // paste your Apps Script web app link here
+
+    const daySel = document.getElementById('daySel');
+    const itemsDiv = document.getElementById('items');
+    const saveBtn = document.getElementById('saveBtn');
+
+    // build day selector
+    for (let i = 1; i <= 30; i++) {
+      const opt = document.createElement('option');
+      opt.value = i; opt.text = "Day " + i;
+      daySel.appendChild(opt);
+    }
+
+    daySel.addEventListener('change', loadDay);
+    saveBtn.addEventListener('click', saveDay);
+
+    loadDay(); // load first day initially
+
+    function loadDay() {
+      const day = daySel.value;
+      fetch(WEBAPP_URL + "?day=" + day)
+        .then(res => res.json())
+        .then(data => renderItems(data));
+    }
+
+    function renderItems(data) {
+      itemsDiv.innerHTML = '';
+      data.labels.forEach((label, idx) => {
+        const id = "chk" + idx;
+        const div = document.createElement('div');
+        div.className = 'row';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.id = id;
+        cb.checked = !!data.states[idx];
+        const lbl = document.createElement('label');
+        lbl.htmlFor = id;
+        lbl.innerText = label;
+        div.appendChild(cb); div.appendChild(lbl);
+        itemsDiv.appendChild(div);
+      });
+    }
+
+    function saveDay() {
+      const day = parseInt(daySel.value, 10);
+      const states = [];
+      itemsDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
+        states.push(cb.checked);
+      });
+
+      fetch(WEBAPP_URL, {
+        method: "POST",
+        body: JSON.stringify({ day: day, states: states })
+      })
+      .then(res => res.json())
+      .then(resp => {
+        alert("Saved for Day " + day);
+      });
+    }
+  </script>
+</body>
+</html>
