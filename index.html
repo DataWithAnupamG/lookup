@@ -85,8 +85,8 @@
 
   <div id="successScreen">
     <h2>✅ Submitted Successfully!</h2>
-    <p>Your response has been recorded.</p>
-    <button onclick="newResponse()">Submit another response</button>
+    <p id="successMsg">Your response has been recorded.</p>
+    <button id="nextBtn" onclick="nextDay()">Go to Next Day</button>
   </div>
 
   <canvas id="confettiCanvas"></canvas>
@@ -98,10 +98,14 @@
     const saveBtn = document.getElementById('saveBtn');
     const formScreen = document.getElementById('formScreen');
     const successScreen = document.getElementById('successScreen');
+    const successMsg = document.getElementById('successMsg');
+    const nextBtn = document.getElementById('nextBtn');
     const confettiCanvas = document.getElementById("confettiCanvas");
     const ctx = confettiCanvas.getContext("2d");
 
-    // build day selector
+    let currentDay = 1;
+
+    // Build day selector once
     for (let i = 1; i <= 30; i++) {
       daySel.innerHTML += `<option value="${i}">Day ${i}</option>`;
     }
@@ -111,8 +115,8 @@
     loadDay();
 
     function loadDay() {
-      const day = daySel.value;
-      fetch(WEBAPP_URL + "?day=" + day)
+      currentDay = parseInt(daySel.value, 10);
+      fetch(WEBAPP_URL + "?day=" + currentDay)
         .then(res => res.json())
         .then(data => renderItems(data));
     }
@@ -137,7 +141,6 @@
     }
 
     function saveDay() {
-      const day = parseInt(daySel.value, 10);
       const states = [];
       itemsDiv.querySelectorAll('input[type=checkbox]').forEach(cb => {
         states.push(cb.checked);
@@ -145,7 +148,7 @@
 
       fetch(WEBAPP_URL, {
         method: "POST",
-        body: JSON.stringify({ day: day, states: states })
+        body: JSON.stringify({ day: currentDay, states: states })
       })
       .then(res => res.json())
       .then(resp => {
@@ -153,18 +156,30 @@
       });
     }
 
-    // Show success screen with confetti
+    // Show success screen
     function showSuccess() {
       formScreen.style.display = "none";
       successScreen.style.display = "block";
+      successMsg.innerText = `Your response for Day ${currentDay} has been recorded.`;
       startConfetti();
-      setTimeout(stopConfetti, 3000); // stop after 3 sec
+      setTimeout(stopConfetti, 3000);
+
+      // If last day, change button text
+      if (currentDay === 30) {
+        nextBtn.innerText = "🎉 All Days Completed!";
+        nextBtn.disabled = true;
+      }
     }
 
-    function newResponse() {
-      successScreen.style.display = "none";
-      formScreen.style.display = "block";
-      loadDay();
+    // Go to next day after success
+    function nextDay() {
+      if (currentDay < 30) {
+        currentDay++;
+        daySel.value = currentDay;
+        loadDay();
+        successScreen.style.display = "none";
+        formScreen.style.display = "block";
+      }
     }
 
     // --- Confetti Animation ---
@@ -215,4 +230,3 @@
   </script>
 </body>
 </html>
-
