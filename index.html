@@ -1,13 +1,58 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>30-Day Checklist</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 500px; margin: 20px auto; }
-    label { margin-left: 6px; }
-    .row { margin: 8px 0; }
-    button, select { padding: 6px 10px; margin-top: 10px; width: 100%; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
+      background: #f9f9f9;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    label {
+      margin-left: 8px;
+      font-size: 16px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      margin: 6px 0;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    input[type=checkbox] {
+      width: 20px;
+      height: 20px;
+      accent-color: #007bff;
+    }
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    button {
+      background: #007bff;
+      color: #fff;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
@@ -82,3 +127,4 @@
   </script>
 </body>
 </html>
+
