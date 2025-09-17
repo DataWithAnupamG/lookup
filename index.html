@@ -10,15 +10,14 @@
       margin: 0;
       padding: 15px;
       background: #f9f9f9;
+      text-align: center;
     }
     h2 {
-      text-align: center;
       margin-bottom: 15px;
     }
     .row {
       display: flex;
       align-items: center;
-      justify-content: flex-start;
       padding: 15px;
       margin: 8px 0;
       background: #fff;
@@ -35,7 +34,7 @@
       height: 22px;
       margin-right: 12px;
       accent-color: #007bff;
-      pointer-events: none; /* prevent direct clicks, row handles toggle */
+      pointer-events: none;
     }
     label {
       font-size: 16px;
@@ -61,34 +60,55 @@
     button:hover {
       background: #0056b3;
     }
+    #successScreen {
+      display: none;
+      margin-top: 50px;
+    }
+    #confettiCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
-  <h2>Daily Checklist</h2>
+  <div id="formScreen">
+    <h2>Daily Checklist</h2>
+    <label for="daySel">Select Day</label>
+    <select id="daySel"></select>
+    <div id="items"></div>
+    <button id="saveBtn">Save</button>
+  </div>
 
-  <label for="daySel">Select Day</label>
-  <select id="daySel"></select>
+  <div id="successScreen">
+    <h2>✅ Submitted Successfully!</h2>
+    <p>Your response has been recorded.</p>
+    <button onclick="newResponse()">Submit another response</button>
+  </div>
 
-  <div id="items"></div>
-
-  <button id="saveBtn">submit the  day</button>
+  <canvas id="confettiCanvas"></canvas>
 
   <script>
     const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzRkW6fk3GqZz9xuolGNFhtoYS3DmWsLRYMAupMqcUk0QNmL0H7oQptBEYGCJHj7kNc/exec"; // paste your Apps Script web app link here
-
     const daySel = document.getElementById('daySel');
     const itemsDiv = document.getElementById('items');
     const saveBtn = document.getElementById('saveBtn');
+    const formScreen = document.getElementById('formScreen');
+    const successScreen = document.getElementById('successScreen');
+    const confettiCanvas = document.getElementById("confettiCanvas");
+    const ctx = confettiCanvas.getContext("2d");
 
-    // Build day selector once
+    // build day selector
     for (let i = 1; i <= 30; i++) {
       daySel.innerHTML += `<option value="${i}">Day ${i}</option>`;
     }
 
     daySel.addEventListener('change', loadDay);
     saveBtn.addEventListener('click', saveDay);
-
-    loadDay(); // load first day initially
+    loadDay();
 
     function loadDay() {
       const day = daySel.value;
@@ -98,7 +118,6 @@
     }
 
     function renderItems(data) {
-      // Build all rows at once for speed
       let html = '';
       data.labels.forEach((label, idx) => {
         const checked = data.states[idx] ? "checked" : "";
@@ -112,7 +131,6 @@
       itemsDiv.innerHTML = html;
     }
 
-    // Toggle checkbox when clicking anywhere on row
     function toggleRow(row) {
       const cb = row.querySelector('input[type=checkbox]');
       cb.checked = !cb.checked;
@@ -131,11 +149,70 @@
       })
       .then(res => res.json())
       .then(resp => {
-        alert("Saved for Day " + day);
+        showSuccess();
       });
+    }
+
+    // Show success screen with confetti
+    function showSuccess() {
+      formScreen.style.display = "none";
+      successScreen.style.display = "block";
+      startConfetti();
+      setTimeout(stopConfetti, 3000); // stop after 3 sec
+    }
+
+    function newResponse() {
+      successScreen.style.display = "none";
+      formScreen.style.display = "block";
+      loadDay();
+    }
+
+    // --- Confetti Animation ---
+    let confettiPieces = [];
+    function resizeCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function startConfetti() {
+      confettiPieces = Array.from({ length: 150 }, () => ({
+        x: Math.random() * confettiCanvas.width,
+        y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+        r: Math.random() * 6 + 4,
+        d: Math.random() * 20 + 10,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+        tilt: Math.random() * 10 - 10,
+        tiltAngle: 0
+      }));
+      requestAnimationFrame(drawConfetti);
+    }
+
+    function drawConfetti() {
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiPieces.forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = p.color;
+        ctx.ellipse(p.x, p.y, p.r, p.r/2, Math.PI/4, 0, 2*Math.PI);
+        ctx.fill();
+        p.y += Math.cos(p.d) + 2 + p.r / 2;
+        p.x += Math.sin(p.d);
+        if (p.y > confettiCanvas.height) {
+          p.y = -10;
+          p.x = Math.random() * confettiCanvas.width;
+        }
+      });
+      if (confettiPieces.length > 0) {
+        requestAnimationFrame(drawConfetti);
+      }
+    }
+
+    function stopConfetti() {
+      confettiPieces = [];
+      ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
     }
   </script>
 </body>
 </html>
-
 
