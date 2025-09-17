@@ -15,23 +15,31 @@
       text-align: center;
       margin-bottom: 15px;
     }
-    label {
-      margin-left: 8px;
-      font-size: 16px;
-    }
     .row {
       display: flex;
       align-items: center;
-      padding: 10px;
-      margin: 6px 0;
+      justify-content: flex-start;
+      padding: 15px;
+      margin: 8px 0;
       background: #fff;
-      border-radius: 8px;
+      border-radius: 10px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: background 0.2s;
     }
-    input[type=checkbox] {
-      width: 20px;
-      height: 20px;
+    .row:hover {
+      background: #f1f1f1;
+    }
+    .row input[type=checkbox] {
+      width: 22px;
+      height: 22px;
+      margin-right: 12px;
       accent-color: #007bff;
+      pointer-events: none; /* prevent direct clicks, row handles toggle */
+    }
+    label {
+      font-size: 16px;
+      cursor: pointer;
     }
     select, button {
       width: 100%;
@@ -63,7 +71,7 @@
 
   <div id="items"></div>
 
-  <button id="saveBtn">Save</button>
+  <button id="saveBtn">submit the  day</button>
 
   <script>
     const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzRkW6fk3GqZz9xuolGNFhtoYS3DmWsLRYMAupMqcUk0QNmL0H7oQptBEYGCJHj7kNc/exec"; // paste your Apps Script web app link here
@@ -72,11 +80,9 @@
     const itemsDiv = document.getElementById('items');
     const saveBtn = document.getElementById('saveBtn');
 
-    // build day selector
+    // Build day selector once
     for (let i = 1; i <= 30; i++) {
-      const opt = document.createElement('option');
-      opt.value = i; opt.text = "Day " + i;
-      daySel.appendChild(opt);
+      daySel.innerHTML += `<option value="${i}">Day ${i}</option>`;
     }
 
     daySel.addEventListener('change', loadDay);
@@ -92,20 +98,24 @@
     }
 
     function renderItems(data) {
-      itemsDiv.innerHTML = '';
+      // Build all rows at once for speed
+      let html = '';
       data.labels.forEach((label, idx) => {
-        const id = "chk" + idx;
-        const div = document.createElement('div');
-        div.className = 'row';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox'; cb.id = id;
-        cb.checked = !!data.states[idx];
-        const lbl = document.createElement('label');
-        lbl.htmlFor = id;
-        lbl.innerText = label;
-        div.appendChild(cb); div.appendChild(lbl);
-        itemsDiv.appendChild(div);
+        const checked = data.states[idx] ? "checked" : "";
+        html += `
+          <div class="row" onclick="toggleRow(this)">
+            <input type="checkbox" id="chk${idx}" ${checked}>
+            <label for="chk${idx}">${label}</label>
+          </div>
+        `;
       });
+      itemsDiv.innerHTML = html;
+    }
+
+    // Toggle checkbox when clicking anywhere on row
+    function toggleRow(row) {
+      const cb = row.querySelector('input[type=checkbox]');
+      cb.checked = !cb.checked;
     }
 
     function saveDay() {
@@ -127,4 +137,5 @@
   </script>
 </body>
 </html>
+
 
